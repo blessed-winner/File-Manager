@@ -24,7 +24,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
            port:Number(config.get<string>('DB_PORT')),
            username:config.get<string>('DB_USERNAME'),
            password:config.get<string>('DB_PASSWORD'),
-           entities: [ ],
+           entities: [],
            synchronize:true
        }) 
     })
