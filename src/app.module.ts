@@ -5,6 +5,7 @@ import { FileModule } from './file/file.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService} from '@nestjs/config';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { File } from './file/entities/file.entity';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
            port:Number(config.get<string>('DB_PORT')),
            username:config.get<string>('DB_USERNAME'),
            password:config.get<string>('DB_PASSWORD'),
-           entities: [],
+           entities: [File],
            synchronize:true
        }) 
     })
