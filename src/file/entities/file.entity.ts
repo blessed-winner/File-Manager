@@ -30,6 +30,6 @@ export class File{
     updatedAt:Date
 
     //TO DO: Integrating with the soon to be created user entity
-    @Column({ nullable:true })
-    uploadedBy:string
+    //@Column({ nullable:true })
+    //uploadedBy:string
 }

@@ -11,8 +11,8 @@ export const CloudinaryProvider = {
            api_secret: configService.get<string>('CLD_SECRET_KEY')
         })
 
-        return cloudinary;
+        return cloudinary
     },
 
-    Inject: [ConfigService],
+    inject: [ConfigService],
 }
