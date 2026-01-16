@@ -54,6 +54,7 @@ export class FileService {
         order:{ createdAt:'DESC' }, 
         take:20,
         select:{
+            id:true,
             url:true,
             originalName:true,
             resourceType:true,
@@ -62,6 +63,7 @@ export class FileService {
     })
 
     return files.map(file => new FileResponseDto({
+        id: file.id,
         url: file.url,
         Name: file.originalName,
         type: file.resourceType,
