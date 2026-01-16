@@ -1,9 +1,11 @@
-import { Inject, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { v2 as Cloudinary } from 'cloudinary';
 import { File } from './entities/file.entity';
-import { getResourceType } from 'utils/getFileResourceType';
+import { getCloudinaryFolder, getResourceType } from 'utils/cloudinaryUtils';
+import { getCloudinaryResourceType } from 'utils/cloudinaryUtils';
+import { FileResponseDto } from './dto/fileResponse.dto';
 
 @Injectable()
 export class FileService {
@@ -32,11 +34,9 @@ export class FileService {
      }
   }
 
-  
-
   private uploadToCloudinary(file:Express.Multer.File,resourceType):Promise<any>{
-       const folder = this.getCloudinaryFolder(resourceType)
-       const cloudinaryResourceType = this.getCloudinaryResourceType(resourceType)
+       const folder = getCloudinaryFolder(resourceType)
+       const cloudinaryResourceType = getCloudinaryResourceType(resourceType)
 
        return new Promise((resolve,reject)=>{
          this.cloudinary.uploader.upload_stream(
@@ -49,18 +49,41 @@ export class FileService {
        })
   } 
 
-  private getCloudinaryResourceType(resourceType:string){
-       if(resourceType == 'image') return 'image'
-       if(resourceType == 'video') return 'video'
-       return 'raw'
+  async listFiles():Promise<FileResponseDto[]>{
+      const files =await this.fileRepo.find({
+        order:{ createdAt:'DESC' }, 
+        take:20,
+        select:{
+            url:true,
+            originalName:true,
+            resourceType:true,
+            size:true,
+        }
+    })
+
+    return files.map(file => new FileResponseDto({
+        url: file.url,
+        Name: file.originalName,
+        type: file.resourceType,
+        size: file.size,
+    }))
   }
 
-  private getCloudinaryFolder(resourceType:string){
-         if(resourceType == 'image') return 'images'
-         if(resourceType == 'video') return 'videos'
-         if(resourceType == 'audio') return 'audio'
-         if(resourceType == 'text') return 'text'
-         if(resourceType == 'document') return 'documents'
-         return 'files'
-}
+  async getFileInfo(id:string){
+      const file = await this.fileRepo.findOneBy({ id })
+      if(!file){
+        throw new InternalServerErrorException('Something went wrong. Failed to fetch file info')
+      }
+
+      return new FileResponseDto({
+        id: file.id,
+        url: file.url,
+        Name: file.originalName,
+        mime_type: file.mimeType,
+        type: file.resourceType,
+        size: file.size,
+        createdAt: file.createdAt
+      })
+  }
+
 }

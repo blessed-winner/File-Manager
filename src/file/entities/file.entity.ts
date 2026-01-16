@@ -3,19 +3,19 @@ import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn } from "typeor
 @Entity()
 export class File{
     @PrimaryGeneratedColumn('uuid')
-    id: String
+    id: string
 
     @Column()
     publicId:string
 
     @Column()
-    url:String
+    url:string
 
     @Column()
     originalName:string
 
     @Column()
-    resourceType:String
+    resourceType:string
 
     @Column()
     mimeType:string
