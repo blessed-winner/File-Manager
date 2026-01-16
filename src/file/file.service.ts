@@ -24,7 +24,7 @@ export class FileService {
             resourceType,
             size:cloudinaryResult.bytes
         })
-        console.log(savedFile.mimeType)
+        //console.log(savedFile.mimeType)
         return savedFile
      } catch (err) {
         console.log('Upload failed', err)
@@ -35,12 +35,12 @@ export class FileService {
   
 
   private uploadToCloudinary(file:Express.Multer.File,resourceType):Promise<any>{
-       const folder = resourceType == 'image' ? 'images' : resourceType == 'video' ? 'videos' : resourceType == 'audio' ? 'audio' : resourceType == 'text' ? 
-       'text' : resourceType == 'document'? 'documents' : 'files'
+       const folder = this.getCloudinaryFolder(resourceType)
+       const cloudinaryResourceType = this.getCloudinaryResourceType(resourceType)
 
        return new Promise((resolve,reject)=>{
          this.cloudinary.uploader.upload_stream(
-            { folder },
+            { folder, resource_type:cloudinaryResourceType },
             (err,result) => {
                 if (err) return reject(err)
                 resolve(result)
@@ -48,4 +48,19 @@ export class FileService {
          ).end(file.buffer)
        })
   } 
+
+  private getCloudinaryResourceType(resourceType:string){
+       if(resourceType == 'image') return 'image'
+       if(resourceType == 'video') return 'video'
+       return 'raw'
+  }
+
+  private getCloudinaryFolder(resourceType:string){
+         if(resourceType == 'image') return 'images'
+         if(resourceType == 'video') return 'videos'
+         if(resourceType == 'audio') return 'audio'
+         if(resourceType == 'text') return 'text'
+         if(resourceType == 'document') return 'documents'
+         return 'files'
+}
 }

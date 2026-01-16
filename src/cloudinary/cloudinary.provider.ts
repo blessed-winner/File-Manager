@@ -8,7 +8,7 @@ export const CloudinaryProvider = {
         cloudinary.config({
            cloud_name: configService.get<string>('CLD_CLOUD_NAME'),
            api_key: configService.get<string>('CLD_API_KEY'),
-           api_secret: configService.get<string>('CLD_SECRET_KEY')
+           api_secret: configService.get<string>('CLD_API_SECRET')
         })
 
         return cloudinary
