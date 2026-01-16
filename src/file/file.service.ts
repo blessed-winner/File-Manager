@@ -88,4 +88,38 @@ export class FileService {
       })
   }
 
+async getFileDownloadUrl(id: string): Promise<string> {
+    try {
+      const file = await this.fileRepo.findOneBy({ id });
+
+      if (!file) {
+        throw new NotFoundException(`File with ID "${id}" not found`);
+      }
+
+      const safeName = file.originalName
+        .split('.')               
+        .slice(0, -1)             
+        .join('.')                
+        .replace(/[^a-zA-Z0-9_-]/g, '_');
+
+      const attachmentName = safeName || 'download';
+
+      const downloadUrl = file.url.replace(
+        /\/upload\//,
+        `/upload/fl_attachment:${attachmentName}/`
+      );
+
+      return downloadUrl;
+
+    } catch (err) {
+      if (err instanceof NotFoundException) {
+        throw err;
+      }
+
+      console.error('Error generating Cloudinary download link:', err);
+      throw new InternalServerErrorException(
+        'Something went wrong. Failed to generate download link.'
+      );
+    }
+  }
 }

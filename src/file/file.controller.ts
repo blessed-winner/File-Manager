@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Get, Param, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express'
 import { FileService } from './file.service';
 
@@ -21,5 +21,11 @@ export class FileController {
   @Get(':id')
   async getFileInfo(@Param('id') id:string){
       return this.fileService.getFileInfo(id)
+  }
+
+  @Get('download/:id')
+  async downloadFile(@Param('id') id:string, @Res() res){
+     const downloadUrl = await this.fileService.getFileDownloadUrl(id)
+     return res.redirect(downloadUrl)
   }
 }
