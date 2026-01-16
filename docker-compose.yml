@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      target: builder
+
+    container_name: nestjs_api
+
+    command: npm run start:dev
+    ports:
+      - '3000:3000'
+
+     
+    volumes:
+      - .:/app
+      - /app/node_modules
+    # Map the env file to the container
+    env_file:
+      - .env
+    environment:
+      # This overrides the URL to ensure it points to the 'db' service container
+      DATABASE_URL: ${DATABASE_URL}
+    depends_on:
+      - db
+
+  db:
+    image: postgres:15-alpine
+    container_name: postgres_db
+    ports:
+      - '5432:5432'
+    environment:
+      # Docker uses these to initialize the database
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
