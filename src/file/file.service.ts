@@ -137,7 +137,7 @@ async getFileDownloadUrl(id: string): Promise<string> {
             throw new NotFoundException('File not found')
            }
            await this.deleteCloudinaryFile(file.publicId,file.resourceType)
-           await this.fileRepo.delete({ id })
+           await this.fileRepo.remove(file)
 
            return { message: 'File deleted successfully' }
        } catch (err) {
