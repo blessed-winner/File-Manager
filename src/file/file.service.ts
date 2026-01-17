@@ -122,4 +122,27 @@ async getFileDownloadUrl(id: string): Promise<string> {
       );
     }
   }
+
+  private async deleteCloudinaryFile(publicId:string, resourceType:string){
+        const result = await this.cloudinary.uploader.destroy(publicId,{resource_type:resourceType})
+        if(result.result !== 'ok' && result.result !== 'not found'){
+          throw new InternalServerErrorException('Failed to delete file from cloud storage')
+        }
+  }
+
+  async deleteFile(id:string){
+       try {
+            const file = await this.fileRepo.findOneBy({ id })
+            if(!file){
+            throw new NotFoundException('File not found')
+           }
+           await this.deleteCloudinaryFile(file.publicId,file.resourceType)
+           await this.fileRepo.delete({ id })
+
+           return { message: 'File deleted successfully' }
+       } catch (err) {
+          throw new InternalServerErrorException('Something went wrong. File deletion failed')
+       }
+      
+  }
 }

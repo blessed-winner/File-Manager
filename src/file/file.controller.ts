@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Controller, Delete, Get, Param, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express'
 import { FileService } from './file.service';
 
@@ -27,5 +27,10 @@ export class FileController {
   async downloadFile(@Param('id') id:string, @Res() res){
      const downloadUrl = await this.fileService.getFileDownloadUrl(id)
      return res.redirect(downloadUrl)
+  }
+
+  @Delete(':id')
+  async deleteFile(@Param('id') id:string){
+      return this.fileService.deleteFile(id)
   }
 }
