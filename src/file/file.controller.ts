@@ -1,6 +1,8 @@
-import { Controller, Delete, Get, Param, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express'
 import { FileService } from './file.service';
+import { File } from './entities/file.entity';
+import { BulkDeleteDto } from './dto/bulkDelete.dto';
 
 @Controller('file')
 export class FileController {
@@ -32,5 +34,14 @@ export class FileController {
   @Delete(':id')
   async deleteFile(@Param('id') id:string){
       return this.fileService.deleteFile(id)
+  }
+
+  @Delete('bulk/delete')
+  async bulkDeleteFiles(@Body() bulkDeleteDto: BulkDeleteDto){
+    const { ids } = bulkDeleteDto
+
+    const files = await this.fileService.findFilesByIds(ids)
+
+     return this.fileService.bulkDelete(files)
   }
 }

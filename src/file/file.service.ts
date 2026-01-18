@@ -1,6 +1,6 @@
 import { Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { v2 as Cloudinary } from 'cloudinary';
 import { File } from './entities/file.entity';
 import { getCloudinaryFolder, getResourceType } from 'utils/cloudinaryUtils';
@@ -65,7 +65,7 @@ export class FileService {
     return files.map(file => new FileResponseDto({
         id: file.id,
         url: file.url,
-        Name: file.originalName,
+        name: file.originalName,
         type: file.resourceType,
         size: file.size,
     }))
@@ -80,11 +80,11 @@ export class FileService {
       return new FileResponseDto({
         id: file.id,
         url: file.url,
-        Name: file.originalName,
+        name: file.originalName,
         mime_type: file.mimeType,
         type: file.resourceType,
         size: file.size,
-        createdAt: file.createdAt
+        createdAt: file.createdAt.toISOString(),
       })
   }
 
@@ -143,6 +143,28 @@ async getFileDownloadUrl(id: string): Promise<string> {
        } catch (err) {
           throw new InternalServerErrorException('Something went wrong. File deletion failed')
        }
-      
-  }
+    }
+
+    async bulkDelete(files:File[]){
+        if(!files ||!files.length) return {
+            deleted: 0,
+            message: 'No files to delete'
+        }
+        const grouped = files.reduce((acc, file)=>{
+           acc[file.resourceType] ??= []
+           acc[file.resourceType].push(file.publicId)
+           return acc 
+        },{} as Record<string,string[]>)
+        
+        for(const [resourceType,publicIds] of Object.entries(grouped)){
+           await this.cloudinary.api.delete_resources(publicIds,{ resource_type:resourceType as any })
+        }
+
+        await this.fileRepo.remove(files)
+
+    }
+
+    async findFilesByIds(ids:string[]):Promise<File[]>{
+        return this.fileRepo.find({where:{ id: In(ids) }  })
+    }
 }
