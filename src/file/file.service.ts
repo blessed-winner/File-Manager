@@ -1,4 +1,4 @@
-import { Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { HttpException, Inject, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { v2 as Cloudinary } from 'cloudinary';
@@ -141,12 +141,14 @@ async getFileDownloadUrl(id: string): Promise<string> {
 
            return { message: 'File deleted successfully' }
        } catch (err) {
-          throw new InternalServerErrorException('Something went wrong. File deletion failed')
-       }
+          console.error(err)
+          throw err
+      }
     }
 
     async bulkDelete(files:File[]){
-        if(!files ||!files.length) return {
+      try {
+         if(!files ||!files.length) return {
             deleted: 0,
             message: 'No files to delete'
         }
@@ -161,6 +163,14 @@ async getFileDownloadUrl(id: string): Promise<string> {
         }
 
         await this.fileRepo.remove(files)
+      } catch (err) {
+        if(err instanceof NotFoundException){
+          throw err
+        }
+        console.log('Bulk deletion failed', err)
+        throw new InternalServerErrorException('Bulk file deletion failed')
+      }
+       
 
     }
 
