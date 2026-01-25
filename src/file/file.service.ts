@@ -141,6 +141,7 @@ async getFileDownloadUrl(id: string): Promise<string> {
 
            return { message: 'File deleted successfully' }
        } catch (err) {
+        console.error('File deletion failed', err)
           throw err
       }
     }
