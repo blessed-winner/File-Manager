@@ -124,9 +124,19 @@ async getFileDownloadUrl(id: string): Promise<string> {
   }
 
   private async deleteCloudinaryFile(publicId:string, resourceType:string){
-        const result = await this.cloudinary.uploader.destroy(publicId,{resource_type:resourceType})
-        if(result.result !== 'ok' && result.result !== 'not found'){
-          throw new InternalServerErrorException('Failed to delete file from cloud storage')
+        try {
+          const result = await this.cloudinary.uploader.destroy(publicId,{resource_type:resourceType})
+          if(result.result !== 'ok' && result.result !== 'not found'){
+            throw new InternalServerErrorException('Failed to delete file from cloud storage')
+          }
+        } catch (err) {
+          console.error('Cloudinary delete error:', err);
+          // If it's a 404 (not found), it's safe to continue
+          if (err.message && err.message.includes('404')) {
+            console.warn(`File ${publicId} not found in Cloudinary, continuing...`);
+            return;
+          }
+          throw err;
         }
   }
 
@@ -159,10 +169,20 @@ async getFileDownloadUrl(id: string): Promise<string> {
         },{} as Record<string,string[]>)
         
         for(const [resourceType,publicIds] of Object.entries(grouped)){
-           await this.cloudinary.api.delete_resources(publicIds,{ resource_type:resourceType as any })
+           try {
+             await this.cloudinary.api.delete_resources(publicIds,{ resource_type:resourceType as any })
+           } catch (err) {
+             console.error(`Error deleting resources of type ${resourceType}:`, err);
+             // Continue with database cleanup even if Cloudinary deletion fails
+           }
         }
 
         await this.fileRepo.remove(files)
+        
+        return {
+          deleted: files.length,
+          message: 'Files deleted successfully'
+        }
       } catch (err) {
         if(err instanceof NotFoundException){
           throw err
@@ -170,8 +190,6 @@ async getFileDownloadUrl(id: string): Promise<string> {
         console.log('Bulk deletion failed', err)
         throw new InternalServerErrorException('Bulk file deletion failed')
       }
-       
-
     }
 
     async findFilesByIds(ids:string[]):Promise<File[]>{
