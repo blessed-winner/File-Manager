@@ -96,6 +96,7 @@ async getFileDownloadUrl(id: string): Promise<string> {
         throw new NotFoundException(`File with ID "${id}" not found`);
       }
 
+      const extension = file.originalName.split('.').pop();
       const safeName = file.originalName
         .split('.')               
         .slice(0, -1)             
@@ -106,7 +107,7 @@ async getFileDownloadUrl(id: string): Promise<string> {
 
       const downloadUrl = file.url.replace(
         /\/upload\//,
-        `/upload/fl_attachment:${attachmentName}/`
+        `/upload/fl_attachment:${attachmentName}.${extension}/`
       );
 
       return downloadUrl;
