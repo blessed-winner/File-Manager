@@ -96,6 +96,10 @@ async getFileDownloadUrl(id: string): Promise<string> {
         throw new NotFoundException(`File with ID "${id}" not found`);
       }
 
+      if(file.resourceType === 'file'){
+        return file.url;
+      }
+
       const extension = file.originalName.split('.').pop();
       const safeName = file.originalName
         .split('.')               
