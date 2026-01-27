@@ -33,7 +33,7 @@ export class FileService {
      }
   }
 
-  private uploadToCloudinary(file:Express.Multer.File,resourceType):Promise<any>{
+  private uploadToCloudinary(file:Express.Multer.File,resourceType:string):Promise<any>{
       const FOLDER_MAP = {
         image:"user_images",
         video:"user_videos",
@@ -105,18 +105,16 @@ async getFileDownloadUrl(id: string): Promise<string> {
         return file.url;
       }
 
-      const extension = file.originalName.split('.').pop();
-      const safeName = file.originalName
-        .split('.')               
-        .slice(0, -1)             
-        .join('.')                
-        .replace(/[^a-zA-Z0-9_-]/g, '_');
+      const extension = file.originalName.includes('.') ? file.originalName.split('.').pop() : '';
+      const baseParts = file.originalName.split('.').slice(0, -1);
+      const safeName = (baseParts.length > 0 ? baseParts.join('.') : file.originalName)
+        .replace(/[^a-zA-Z0-9_.-]/g, '_') || 'download';
+      const attachmentFilename = extension ? `${safeName}.${extension}` : safeName;
 
-      const attachmentName = safeName || 'download';
-
+      
       const downloadUrl = file.url.replace(
         /\/upload\//,
-        `/upload/fl_attachment:${attachmentName}.${extension}/`
+        `/upload/fl_attachment:${attachmentFilename}/`
       );
 
       return downloadUrl;
