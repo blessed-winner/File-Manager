@@ -3,8 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { v2 as Cloudinary } from 'cloudinary';
 import { File } from './entities/file.entity';
-import { getCloudinaryFolder, getResourceType } from 'utils/cloudinaryUtils';
-import { getCloudinaryResourceType } from 'utils/cloudinaryUtils';
+import { getResourceType } from 'utils/cloudinaryUtils';
 import { FileResponseDto } from './dto/fileResponse.dto';
 
 @Injectable()
@@ -35,8 +34,14 @@ export class FileService {
   }
 
   private uploadToCloudinary(file:Express.Multer.File,resourceType):Promise<any>{
-       const folder = getCloudinaryFolder(resourceType)
-       const cloudinaryResourceType = getCloudinaryResourceType(resourceType)
+      const FOLDER_MAP = {
+        image:"user_images",
+        video:"user_videos",
+        raw:"user_files"
+      }
+
+       const cloudinaryResourceType = getResourceType(file.mimetype)
+       const folder = FOLDER_MAP[cloudinaryResourceType] || 'user_files'
 
        return new Promise((resolve,reject)=>{
          this.cloudinary.uploader.upload_stream(
