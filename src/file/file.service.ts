@@ -94,42 +94,44 @@ export class FileService {
   }
 
 async getFileDownloadUrl(id: string): Promise<string> {
-    try {
-      const file = await this.fileRepo.findOneBy({ id });
+  try {
+    const file = await this.fileRepo.findOneBy({ id });
 
-      if (!file) {
-        throw new NotFoundException(`File with ID "${id}" not found`);
-      }
-
-      if(file.resourceType === 'file'){
-        return file.url;
-      }
-
-      const extension = file.originalName.includes('.') ? file.originalName.split('.').pop() : '';
-      const baseParts = file.originalName.split('.').slice(0, -1);
-      const safeName = (baseParts.length > 0 ? baseParts.join('.') : file.originalName)
-        .replace(/[^a-zA-Z0-9_.-]/g, '_') || 'download';
-      const attachmentFilename = extension ? `${safeName}.${extension}` : safeName;
-
-      
-      const downloadUrl = file.url.replace(
-        /\/upload\//,
-        `/upload/fl_attachment:${attachmentFilename}/`
-      );
-
-      return downloadUrl;
-
-    } catch (err) {
-      if (err instanceof NotFoundException) {
-        throw err;
-      }
-
-      console.error('Error generating Cloudinary download link:', err);
-      throw new InternalServerErrorException(
-        'Something went wrong. Failed to generate download link.'
-      );
+    if (!file) {
+      throw new NotFoundException(`File with ID "${id}" not found`);
     }
+
+    // 'raw' resources (file) don't support fl_attachment transformation
+    if (file.resourceType === 'raw' || file.resourceType === 'file') {
+      return file.url;
+    }
+
+    const extension = file.originalName.split('.').pop() || '';
+    const safeName = file.originalName
+      .split('.')
+      .slice(0, -1)
+      .join('.')
+      .replace(/[^a-zA-Z0-9_-]/g, '_') || 'download';
+
+    const attachmentFilename = extension ? `${safeName}.${extension}` : safeName;
+
+    // IMPORTANT: Encode the filename to handle dots and special characters
+    // and use a more robust regex to handle the /upload/ segment
+    const encodedName = encodeURIComponent(attachmentFilename);
+    
+    const downloadUrl = file.url.replace(
+      '/upload/',
+      `/upload/fl_attachment:${encodedName}/`
+    );
+
+    return downloadUrl;
+
+  } catch (err) {
+    if (err instanceof NotFoundException) throw err;
+    console.error('Error generating download link:', err);
+    throw new InternalServerErrorException('Failed to generate download link.');
   }
+}
 
   private async deleteCloudinaryFile(publicId:string, resourceType:string){
         try {
