@@ -197,7 +197,7 @@ async getFileDownloadUrl(id: string): Promise<string> {
 
     await this.fileRepo.remove(files);
 
-    return files;
+    return {deleted:files.length, message:"Files deleted successfully",files};
   } catch (err) {
     if (err instanceof NotFoundException) {
       throw err;
