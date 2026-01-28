@@ -151,57 +151,61 @@ async getFileDownloadUrl(id: string): Promise<string> {
         }
   }
 
-  async deleteFile(id:string){
-       try {
-            const file = await this.fileRepo.findOneBy({ id })
-            if(!file){
-            throw new NotFoundException('File not found')
-           }
-           await this.deleteCloudinaryFile(file.publicId,file.mimeType)
-           await this.fileRepo.remove(file)
+ async deleteFile(id: string) {
+  try {
+    const file = await this.fileRepo.findOneBy({ id });
 
-           return { message: 'File deleted successfully' }
-       } catch (err) {
-        console.error('File deletion failed', err)
-          throw err
-      }
+    if (!file) {
+      throw new NotFoundException(`File with ID "${id}" not found`);
     }
 
-    async bulkDelete(files:File[]){
+    await this.deleteCloudinaryFile(file.publicId, file.mimeType);
+    await this.fileRepo.remove(file);
+
+    return { message: 'File deleted successfully' };
+  } catch (err) {
+    console.error('File deletion failed', err);
+    throw err;
+  }
+}
+
+  async bulkDelete(files: File[]){
+  try {
+    if (!files || !files.length) {
+      return {
+        deleted: 0,
+        message: 'No files to delete',
+      };
+    }
+
+    const grouped = files.reduce((acc, file) => {
+      acc[file.resourceType] ??= [];
+      acc[file.resourceType].push(file.publicId);
+      return acc;
+    }, {} as Record<string, string[]>);
+
+    for (const [resourceType, publicIds] of Object.entries(grouped)) {
       try {
-         if(!files ||!files.length) return {
-            deleted: 0,
-            message: 'No files to delete'
-        }
-        const grouped = files.reduce((acc, file)=>{
-           acc[file.resourceType] ??= []
-           acc[file.resourceType].push(file.publicId)
-           return acc 
-        },{} as Record<string,string[]>)
-        
-        for(const [resourceType,publicIds] of Object.entries(grouped)){
-           try {
-             await this.cloudinary.api.delete_resources(publicIds,{ resource_type:getResourceType(resourceType) })
-           } catch (err) {
-             console.error(`Error deleting resources of type ${resourceType}:`, err);
-             // Continue with database cleanup even if Cloudinary deletion fails
-           }
-        }
-
-        await this.fileRepo.remove(files)
-        
-        return {
-          deleted: files.length,
-          message: 'Files deleted successfully'
-        }
+        await this.cloudinary.api.delete_resources(publicIds, {
+          resource_type: getResourceType(resourceType),
+        });
       } catch (err) {
-        if(err instanceof NotFoundException){
-          throw err
-        }
-        console.log('Bulk deletion failed', err)
-        throw new InternalServerErrorException('Bulk file deletion failed')
+        console.error(`Error deleting resources of type ${resourceType}:`, err);
+        // Continue with database cleanup even if Cloudinary deletion fails
       }
     }
+
+    await this.fileRepo.remove(files);
+
+    return files;
+  } catch (err) {
+    if (err instanceof NotFoundException) {
+      throw err;
+    }
+    console.log('Bulk deletion failed', err);
+    throw new InternalServerErrorException('Bulk file deletion failed');
+  }
+}
 
     async findFilesByIds(ids:string[]):Promise<File[]>{
         return this.fileRepo.find({where:{ id: In(ids) }  })
