@@ -8,4 +8,16 @@ export class AuthService{
     constructor(
         @InjectRepository(User) private userRepo: Repository<User>
     ){}
+
+    async signUp(dto:SignUpDto){
+
+    }
+
+    async findUserByEmail(email:string){
+        return this.userRepo.findOne({where: { email}})
+    }
+
+    async signIn(dto:LoginDto){
+      
+    }
 }
