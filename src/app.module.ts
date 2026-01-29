@@ -6,6 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService} from '@nestjs/config';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { File } from './file/entities/file.entity';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -28,7 +29,8 @@ import { File } from './file/entities/file.entity';
            entities: [File],
            synchronize:true
        }) 
-    })
+    }),
+    AuthModule
   ],
   controllers: [AppController],
   providers: [AppService],

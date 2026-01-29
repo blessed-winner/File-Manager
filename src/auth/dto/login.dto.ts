@@ -1,4 +1,5 @@
-import { IsEmail, IsOptional, IsString } from "class-validator"
+import { IsEmail, IsOptional, IsString, Validate } from "class-validator"
+import { LoginIdentifierValidator } from "utils/validators/login_identifier.validator"
 
 export class LoginDto{
     @IsString()
@@ -13,4 +14,7 @@ export class LoginDto{
 
     @IsString()
     password:string
+
+    @Validate(LoginIdentifierValidator)
+    checkFields:string
 }
