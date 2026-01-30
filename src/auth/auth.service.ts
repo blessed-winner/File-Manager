@@ -12,11 +12,15 @@ export class AuthService{
     ){}
 
     async signUp(dto:SignUpDto){
-
+     
     }
 
-    async findUserByEmail(email:string){
+    private async findUserByEmail(email:string){
         return this.userRepo.findOne({where: { email}})
+    }
+
+    private async generateToken(){
+        
     }
 
 
