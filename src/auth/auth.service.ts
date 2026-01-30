@@ -12,15 +12,21 @@ export class AuthService{
     ){}
 
     async signUp(dto:SignUpDto){
-     
+        
     }
 
-    private async findUserByEmail(email:string){
-        return this.userRepo.findOne({where: { email}})
+    private async findUser(email?:string, username?:string){
+        const isEmailAvailable = email !== undefined
+        if(isEmailAvailable){
+            return this.userRepo.findOne({where: { email}})
+        } else {
+            return this.userRepo.findOne({where: { username}})
+        }
     }
+
 
     private async generateToken(){
-        
+
     }
 
 
