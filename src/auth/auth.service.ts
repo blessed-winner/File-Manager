@@ -26,6 +26,8 @@ export class AuthService{
 
         await this.userRepo.save(newUser)
 
+        const token = await this.generateToken(newUser.email)
+
         return {
             message:"User registered successfully"
         }
@@ -55,6 +57,7 @@ export class AuthService{
          })
 
          return access_token
+         
     }
 
 
