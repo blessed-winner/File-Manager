@@ -1,5 +1,11 @@
 import { Column, PrimaryGeneratedColumn } from "typeorm";
 
+export enum Role{
+    ADMIN = 'admin',
+    EDITOR = 'editor',
+    VIEWER = 'viewer'
+}
+
 export class User{
     @PrimaryGeneratedColumn('uuid')
     id:string;
@@ -24,4 +30,7 @@ export class User{
 
     @Column({default:false})
     isVerified:boolean;
+
+    @Column({type:'enum', enum:Role, default:Role.VIEWER})
+    role:Role;
 }
