@@ -6,12 +6,18 @@ import { Repository } from "typeorm"
 import { PassportStrategy } from "@nestjs/passport"
 import { ExtractJwt, Strategy } from "passport-jwt"
 
+export type JwtPayload = {
+    sub:string,
+    email:string,
+    username:string
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy,'jwt'){
     constructor(
         @InjectRepository(User)
         private userRepo:Repository<User>,
-        private config: ConfigService
+        private config:ConfigService
     ){
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -19,12 +25,11 @@ export class JwtStrategy extends PassportStrategy(Strategy,'jwt'){
         })
     }
 
-    async validate(payload:JwtPayload):Promise<{ id:number, role:Role }>{
+    async validate(payload:JwtPayload){
         const user = await this.userRepo.findOne({ 
-            where:{id:payload.id},
+            where:{id:payload.sub},
             select:{
-               id:true,
-               role:true
+               id:true
             }
          })
 
@@ -32,6 +37,6 @@ export class JwtStrategy extends PassportStrategy(Strategy,'jwt'){
             throw new NotFoundException("User Not Found")
         }
 
-        return  { id:user.id, role:user.role } 
+        return  {id:user.id} 
     }
 }
