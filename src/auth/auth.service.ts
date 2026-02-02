@@ -29,7 +29,8 @@ export class AuthService{
         const token = await this.generateToken(newUser.email)
 
         return {
-            message:"User registered successfully"
+            message:"User registered successfully",
+            access_token:token
         }
     }
 
