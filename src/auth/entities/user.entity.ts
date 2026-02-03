@@ -1,4 +1,4 @@
-import { Column, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 export enum Role{
     ADMIN = 'admin',
@@ -6,6 +6,7 @@ export enum Role{
     VIEWER = 'viewer'
 }
 
+@Entity()
 export class User{
     @PrimaryGeneratedColumn('uuid')
     id:string;

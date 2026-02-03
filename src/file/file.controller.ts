@@ -1,9 +1,14 @@
-import { Body, Controller, Delete, Get, Param, Post, Res, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express'
 import { FileService } from './file.service';
 import { BulkDeleteDto } from './dto/bulkDelete.dto';
+import { AuthGuard } from '@nestjs/passport';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Role } from 'src/auth/entities/user.entity';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
 
 @Controller('file')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
 export class FileController {
    constructor(
      private readonly fileService:FileService
@@ -31,11 +36,13 @@ export class FileController {
   }
 
   @Delete(':id')
+  @Roles(Role.ADMIN)
   async deleteFile(@Param('id') id:string){
       return this.fileService.deleteFile(id)
   }
 
   @Post('bulk/delete')
+  @Roles(Role.ADMIN)
   async bulkDeleteFiles(@Body() bulkDeleteDto: BulkDeleteDto){
     const { ids } = bulkDeleteDto
 

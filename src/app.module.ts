@@ -27,6 +27,7 @@ import { AuthModule } from './auth/auth.module';
            username:config.get<string>('DB_USERNAME'),
            password:config.get<string>('DB_PASSWORD'),
            entities: [File],
+           autoLoadEntities: true,
            synchronize:true
        }) 
     }),

@@ -1,11 +1,10 @@
-import { Inject, Injectable, NotFoundException } from "@nestjs/common";
+import { Injectable, NotFoundException, UnauthorizedException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { User } from "./entities/user.entity";
 import { Repository } from "typeorm";
 import { LoginDto } from "./dto/login.dto";
 import { SignUpDto } from "./dto/signup.dto";
 import * as bcrypt from 'bcrypt';
-import { NotFoundError } from "rxjs";
 import { JwtService } from "@nestjs/jwt";
 import { ConfigService } from "@nestjs/config";
 
@@ -63,6 +62,20 @@ export class AuthService{
 
 
     async signIn(dto:LoginDto){
-      
+        const user = await this.findUser(dto.email, dto.username)
+        if(!user){
+            throw new UnauthorizedException("Invalid credentials")
+        }
+
+        const isValidPassword = await bcrypt.compare(dto.password, user.password)
+        if(!isValidPassword){
+            throw new UnauthorizedException("Invalid credentials")
+        }
+
+        const token = await this.generateToken(user.email)
+        return {
+            message:"User logged in successfully",
+            access_token: token
+        }
     }
 }

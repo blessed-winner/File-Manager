@@ -29,7 +29,8 @@ export class JwtStrategy extends PassportStrategy(Strategy,'jwt'){
         const user = await this.userRepo.findOne({ 
             where:{id:payload.sub},
             select:{
-               id:true
+               id:true,
+               role:true
             }
          })
 
@@ -37,6 +38,6 @@ export class JwtStrategy extends PassportStrategy(Strategy,'jwt'){
             throw new NotFoundException("User Not Found")
         }
 
-        return  {id:user.id} 
+        return  {id:user.id, role:user.role} 
     }
 }
