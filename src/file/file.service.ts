@@ -5,6 +5,10 @@ import { v2 as Cloudinary } from 'cloudinary';
 import { File } from './entities/file.entity';
 import { getResourceType } from 'utils/cloudinaryUtils';
 import { FileResponseDto } from './dto/fileResponse.dto';
+import * as archiver from 'archiver';
+import { Response } from 'express';
+import * as https from 'https';
+import { Readable } from 'stream';
 
 @Injectable()
 export class FileService {
@@ -210,4 +214,60 @@ async getFileDownloadUrl(id: string): Promise<string> {
     async findFilesByIds(ids:string[]):Promise<File[]>{
         return this.fileRepo.find({where:{ id: In(ids) }  })
     }
+
+  async bulkDownload(ids: string[], res: Response) {
+    const files = await this.findFilesByIds(ids);
+
+    if (!files.length) {
+      throw new NotFoundException('No files found to download');
+    }
+
+    const archive = archiver('zip', {
+      zlib: { level: 9 }, // Sets the compression level.
+    });
+
+    res.setHeader('Content-Type', 'application/zip');
+    res.setHeader('Content-Disposition', 'attachment; filename="bulk_download.zip"');
+
+    archive.pipe(res);
+
+    const usedNames = new Set<string>();
+
+    for (const file of files) {
+      let filename = file.originalName;
+      let counter = 1;
+
+      // Handle duplicate filenames within the zip
+      while (usedNames.has(filename)) {
+        const lastDotIndex = file.originalName.lastIndexOf('.');
+        if (lastDotIndex !== -1) {
+          const name = file.originalName.substring(0, lastDotIndex);
+          const ext = file.originalName.substring(lastDotIndex);
+          filename = `${name}_${counter}${ext}`;
+        } else {
+          filename = `${file.originalName}_${counter}`;
+        }
+        counter++;
+      }
+      usedNames.add(filename);
+
+      try {
+        const stream = await new Promise<Readable>((resolve, reject) => {
+          https.get(file.url, (response) => {
+            if (response.statusCode === 200) {
+              resolve(response);
+            } else {
+              reject(new Error(`Failed to fetch file from Cloudinary: ${response.statusCode}`));
+            }
+          }).on('error', reject);
+        });
+
+        archive.append(stream, { name: filename });
+      } catch (error) {
+        console.error(`Error appending file ${file.id} to zip:`, error);
+      }
+    }
+
+    await archive.finalize();
+  }
 }

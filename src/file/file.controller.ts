@@ -6,6 +6,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { Roles } from 'src/auth/decorators/roles.decorator';
 import { Role } from 'src/auth/entities/user.entity';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { BulkDownloadDto } from './dto/bulkDownload.dto';
 
 @Controller('file')
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -49,5 +50,11 @@ export class FileController {
     const files = await this.fileService.findFilesByIds(ids)
 
      return this.fileService.bulkDelete(files)
+  }
+
+  @Post('bulk/download')
+  async bulkDownloadFiles(@Body() dto: BulkDownloadDto, @Res() res){
+    const { ids } = dto
+    await this.fileService.bulkDownload(ids, res)
   }
 }
