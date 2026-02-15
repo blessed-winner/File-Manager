@@ -223,7 +223,7 @@ async getFileDownloadUrl(id: string): Promise<string> {
     }
 
     const archive = archiver('zip', {
-      zlib: { level: 9 }, // Sets the compression level.
+      zlib: { level: 9 }, 
     });
 
     res.setHeader('Content-Type', 'application/zip');
